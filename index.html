@@ -149,6 +149,48 @@
   <![endif]-->
 </head>
 <body>
-<h1 id="pandoc-example">pandoc-example</h1>
+<h1 id="readme-pages">readme-pages</h1>
+<p>Example for generating Github.io pages from Readme with Pandoc. We use the following:</p>
+<ul>
+<li>Pandoc’s own <a href="https://github.com/pandoc/pandoc-action-example">pandoc-action-example</a>.</li>
+<li><a href="https://github.com/marketplace/actions/deploy-to-github-pages">deploy-to-github-pages</a> action.</li>
+</ul>
+<p>The output can be viewed here: <a href="https://jhidding.github.io/readme-pages">github.io/readme-pages</a> Github repo: <a href="https://github.com/jhidding/readme-pages">github.com/jhidding/readme-pages</a></p>
+<h2 id="pandoc">Pandoc</h2>
+<p>Pandoc is the Universal document converter. We can use it to convert our README file into HTML.</p>
+<pre><code>    docker run pandoc/core pandoc --version</code></pre>
+<p>First try it locally:</p>
+<pre><code>    mkdir -p build
+    docker run -v $PWD:/tmp pandoc/core -s /tmp/README.md \
+            --metadata title=&quot;Hello, Pandoc&quot; &gt; build/index.html</code></pre>
+<p>Now we wish to run this command from a Github Action and upload the result to the <code>gh-pages</code> branch.</p>
+<pre><code>    name: Deploy pages
+    on:
+        push:
+            branches:
+              - main
+    jobs:
+        deploy:
+            runs-on: ubuntu-latest
+            steps:
+                - name: checkout
+                  uses: actions/checkout@v2
+                - name: prepare
+                  run: |
+                    mkdir -p build
+                    touch build/.nojekyll   
+                - name: pandoc
+                  uses: docker://pandoc/core:2.12
+                  with:
+                    args: &gt;-
+                      --standalone
+                      --output=build/index.html
+                      --metadata title=&quot;Hello, Pandoc&quot;
+                      README.md
+                - name: deploy
+                  uses: JamesIves/github-pages-deploy-action@4.1.0
+                  with:
+                    branch: gh-pages
+                    folder: build</code></pre>
 </body>
 </html>
